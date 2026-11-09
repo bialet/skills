@@ -1,4 +1,4 @@
-# 🚲 Bialet Web Developer
+# 🚲 Bialet App Builder
 
 <p align="center">
   <strong>Small on purpose. Taught step by step.</strong><br />
@@ -70,8 +70,15 @@ from the first file:
 
 ## How to use it
 
-1. Add this skill to your AI assistant (Claude, ChatGPT, Cursor, or any client
-   that loads `SKILL.md` files).
+1. Add the skill to your coding agent:
+
+   ```bash
+   npx skills add bialet/skills --skill bialet-app-builder
+   ```
+
+   This installs it into `.agents/skills/bialet-app-builder` and links it to
+   Claude Code, Codex, Cursor, OpenCode, and the rest of the supported agents.
+   Add `-g` to make it available in every project.
 2. Install Bialet and check it runs:
 
    ```bash

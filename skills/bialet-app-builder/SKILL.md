@@ -1,5 +1,5 @@
 ---
-name: bialet-build
+name: bialet-app-builder
 description: |-
   Build web apps the old-school way with Bialet: start from static HTML, add SQLite tables, then wire up server-rendered logic. The assistant guides you step‑by‑step, never jumping ahead without confirmation — perfect for beginners, CRUD tools, and internal dashboards.
   TRIGGER — read this skill whenever the user:  mentions “Bialet”; asks to build something with “server‑side rendering”, “file‑based routing”, “classic PHP style”, “no JavaScript frameworks”, “just HTML and SQLite”, or “zero‑config web framework”; describes a project that is clearly a multi‑page, database‑backed web app (e.g., a blog, guestbook, inventory, dashboard).
