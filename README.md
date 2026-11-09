@@ -53,7 +53,7 @@ phases, confirming each one before moving on:
 
 | Phase | What happens |
 | --- | --- |
-| **1. Static HTML & visual structure** | Pure HTML with placeholder data, styled with a classless CSS framework (the examples use PicoCSS). |
+| **1. Static HTML & visual structure** | Semantic HTML with placeholder data, and no stylesheet by default. |
 | **2. Database design** | The placeholders become a `_app/migration.wren` with SQLite tables, keys and timestamps. |
 | **3. Server-side logic** | A small domain class, parameterised SQL, form handling, and the real data in the page. |
 | **4. Polish & edge cases** | Validation, empty states, 404s, and optionally HTMX for the one interaction that needs it. |
@@ -65,6 +65,8 @@ from the first file:
   `routes/` folder.
 - **Direct SQL** with `?` placeholders — no ORM, no string concatenation.
 - **Semantic HTML** and server-rendered pages; full reloads by default.
+- **No CSS by default** — styling is added only when the page needs it, either as
+  a small hand-written stylesheet or a classless framework like µCSS.
 - **Small, readable Wren** — single-expression methods return implicitly, and
   logic lives at the top of the file with the view at the bottom.
 
