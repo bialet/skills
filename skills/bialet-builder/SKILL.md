@@ -58,7 +58,7 @@ class Layout {
         </header>
         {{ content }}
         <footer class="container">
-          <small>Built with Bialet</small>
+          <small>&copy; My App</small>
         </footer>
       </body>
     </html> }
@@ -172,8 +172,8 @@ If the user needs a form, handle `POST` in the same file:
 ```wren
 if (Request.isPost) {
   var post = Post.new()
-  post.title = Request.post("title")
-  post.content = Request.post("content")
+  post.title = Request.post("title") || ""
+  post.content = Request.post("content") || ""
   post.save()
   return Response.redirect("/")
 }
@@ -198,8 +198,8 @@ Example validation snippet:
 ```wren
 if (Request.isPost) {
   var post = Post.new()
-  post.title = Request.post("title")
-  post.content = Request.post("content")
+  post.title = Request.post("title") || ""
+  post.content = Request.post("content") || ""
   if (post.title == "" || post.content == "") {
     var error = "Title and content are required."
     // re‑render the form with error
@@ -221,6 +221,114 @@ Ask: **“Everything is polished. Would you like to add any other features, or a
 - **Direct SQL**: Always use parameterised queries (`?` placeholders), never string concatenation.
 - **Full page reloads by default**: Only use HTMX when it significantly improves UX.
 - **Keep it simple**: This framework is built for learning and prototyping – avoid over‑engineering.
+
+## Inline HTML pitfalls (read before writing templates!)
+
+Validate a template file with `bialet -t index.wren` before loading it (pass
+the app root as a second argument when the file imports app modules). The
+complete list lives at <https://bialet.dev/pitfalls.html>.
+
+### 1. Never nest the same tag name inside itself
+
+The parser refuses an inner tag with the same name as the outer one:
+
+```wren
+// BROKEN
+var block = <div class="outer"><div class="inner">boom</div></div>
+// Cannot nest <div> inside <div>: use a different tag for the inner element.
+
+// FIXED — use <section>, <article>, <aside>, <span>, ...
+var block = <section class="outer"><span class="inner">works</span></section>
+```
+
+The error names both tags, so it is easy to fix once you know the rule.
+
+### 2. A `map` callback must start on the same line as `|item|`
+
+The callback body is a single expression, and the inline HTML has to begin on
+the line of the parameter list. A newline right after `|item|` makes the
+callback yield nothing — the page renders an empty list, with no error:
+
+```wren
+// BROKEN — <li> starts on the next line: renders <ul></ul>
+{{ xs.map{|item|
+  <li>{{ item }}</li>
+} }}
+
+// FIXED — <li> starts on the callback's line; the HTML may span lines
+{{ xs.map{|item| <li>
+  {{ item }}
+</li>} }}
+```
+
+### 3. No `var` inside a `map` callback
+
+Callback bodies are expressions, not blocks, so `var` is not available. It does
+not always raise; the usual symptom is the same empty list:
+
+```wren
+// BROKEN — var inside the callback
+{{ tasks.map{|t|
+  var cls = t.done ? "done" : ""
+  <li class="{{ cls }}">{{ t.name }}</li>
+} }}
+
+// FIXED — compute inline
+{{ tasks.map{|t| <li class="{{ t.done ? "done" : "" }}">{{ t.name }}</li>} }}
+```
+
+If the expression gets long, add a computed property to the model class, or
+pre-process the list before the template.
+
+### 4. `{{ }}` inside HTML attributes works
+
+Ternaries in an attribute are valid; pre-compute the string when the expression
+is hard to read:
+
+```wren
+<a class="{{ active ? "tab active" : "tab" }}">Link</a>
+
+var tabClass = active ? "tab active" : "tab"
+<a class="{{ tabClass }}">Link</a>
+```
+
+### 5. Dates: `.format()`, `.hh`/`.mi`, or `.hours`/`.minutes`
+
+`Date` has no `.hour`/`.minute` (singular). Use one of:
+
+```wren
+{{ task.createdAt.format("#H:#M") }}              // 15:04
+{{ task.createdAt.hh }}:{{ task.createdAt.mi }}   // 15:04, zero-padded strings
+{{ task.createdAt.hours }}                        // 15, as a Num
+```
+
+Format tokens use `#` instead of `%`: `#Y #m #d #H #M #S`, `#w` (0 = Sunday),
+`#u` (1 = Monday), `#V` (ISO week), `#F` (ISO date). See
+<https://bialet.dev/datetime.html>.
+
+### 6. `Request.post` returns `String | Null`
+
+A missing field is `null`, and calling `.toString`/`.trim` on it crashes the
+request. Always default it before assigning:
+
+```wren
+post.title = Request.post("title") || ""
+```
+
+`{{ }}` renders numbers and strings directly: `<p>{{ count }}</p>` needs no
+`.toString`.
+
+### 7. Query methods take at most three positional arguments
+
+`.toNum(one)`, `.val(a, b)` and friends bind their arguments; with four or more
+values pass one List, or the call fails with
+`Query does not implement 'fetch(_,_,_,_)'`:
+
+```wren
+var n = `SELECT COUNT(*) FROM t WHERE s = ?`.toNum(session)   // ok
+var rows = `SELECT * FROM t WHERE a = ? AND b = ? AND c = ? AND d = ?`
+  .fetch([a, b, c, d])
+```
 
 ## When the user asks for an API
 If they need JSON endpoints, create a separate file (e.g., `api/_route.wren`) and return `Response.json(...)`. Follow the same step‑by‑step approach.
